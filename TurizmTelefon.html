@@ -1,0 +1,649 @@
+<!-- 
+    !!! İPHONE KULLANICILARI İÇİN ÖNEMLİ NOT !!!
+    
+    Eğer bu yazıyı (kodları) görüyorsanız, iPhone dosyayı "Metin Önizleme" modunda açmış demektir.
+    Uygulamayı çalıştırmak için:
+    
+    YÖNTEM 1 (En Kolayı):
+    1. Bu dosyayı kendinize "Mail" atın.
+    2. iPhone Mail uygulamasında eke dokunun.
+    
+    YÖNTEM 2:
+    1. App Store'dan "Documents by Readdle" veya "Google Chrome" indirin.
+    2. Bu dosyayı "Paylaş" diyerek o uygulamalarda açın.
+-->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Antalya Turizm Analizi</title>
+    
+    <!-- iPhone Web App Meta Etiketleri -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Turizm Analiz">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- SheetJS (Excel Okuma) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- html2canvas (Ekran Görüntüsü Alma) -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <!-- Görselleştirme -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    screens: { 'xs': '375px' },
+                    animation: { 'bounce-slow': 'bounce 3s infinite' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f8fafc; 
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: env(safe-area-inset-bottom);
+            overscroll-behavior-y: none; /* Sayfa esnemesini engelle */
+        }
+
+        header { padding-top: max(1rem, env(safe-area-inset-top)); }
+
+        .card { 
+            background: white; 
+            border-radius: 1rem; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            border: 1px solid #e2e8f0; 
+        }
+        
+        .table-container { max-height: 500px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .animate-fade { animation: fadeIn 0.6s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* Mobil Filtre Çekmecesi */
+        #mobileFilters { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; }
+        .filters-closed { max-height: 0; opacity: 0; pointer-events: none; }
+        .filters-open { max-height: 1200px; opacity: 1; pointer-events: auto; }
+
+        @media (min-width: 1024px) {
+            #mobileFilters { max-height: none !important; opacity: 1 !important; pointer-events: auto !important; overflow: visible !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-50">
+
+    <noscript>
+        <div class="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center p-6 text-center">
+            <h1 class="text-2xl font-bold text-red-600 mb-4">JavaScript Gerekli</h1>
+            <p>Bu uygulamanın çalışması için tarayıcı ayarlarından JavaScript'i açmanız gerekmektedir.</p>
+        </div>
+    </noscript>
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white pb-4 px-4 sticky top-0 z-40 shadow-md">
+        <div class="container mx-auto flex justify-between items-center pt-2">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-blue-900/50">
+                    <i class="fa-solid fa-chart-pie text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">Turizm Analiz</h1>
+                    <div class="text-[10px] text-slate-400">Hazırlayan: <span class="text-blue-400 font-bold">Ufuk ÖNCEL</span></div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('helpModal').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-question"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-4 md:p-6 max-w-[1600px] min-h-screen pb-24">
+        
+        <!-- Yükleme Alanı -->
+        <div id="uploadSection" class="max-w-xl mx-auto mt-6 animate-fade">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 relative">
+                
+                <!-- Gizli Input -->
+                <input type="file" id="fileInput" multiple accept=".csv,.xls,.xlsx" class="hidden">
+                
+                <!-- Tıklanabilir Alan (Label) -->
+                <label for="fileInput" class="block p-10 text-center cursor-pointer active:bg-blue-50 transition duration-200">
+                    <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600 animate-bounce-slow">
+                        <i class="fa-solid fa-cloud-arrow-up text-4xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Veri Yükle</h2>
+                    <p class="text-slate-500 mb-8 px-4">Excel dosyanızı seçmek için ekrana dokunun</p>
+                    
+                    <div class="bg-slate-900 text-white py-3 px-6 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg shadow-slate-300">
+                        <i class="fa-solid fa-folder-open"></i> Dosya Seç
+                    </div>
+                </label>
+
+                <div class="bg-slate-50 p-4 border-t border-slate-100 text-center">
+                    <a href="https://www.turob.com/tr/bilgi-merkezi/istatistikler/" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-download"></i> Örnek Veri İndir
+                    </a>
+                </div>
+            </div>
+
+            <!-- iOS Yardım Kartı -->
+            <div class="mt-6 bg-blue-50 rounded-xl p-4 border border-blue-100 flex items-start gap-3">
+                <i class="fa-brands fa-apple text-blue-600 text-xl mt-0.5"></i>
+                <div class="text-sm text-blue-900">
+                    <p class="font-bold mb-1">iPhone'da Açamıyor musunuz?</p>
+                    <p class="opacity-80 text-xs">Bu dosyayı <b>kendinize Mail atın</b> ve Mail uygulamasında açın. En garanti yöntem budur.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden animate-fade">
+            
+            <!-- Mobil Filtre Butonu -->
+            <button onclick="toggleFilters()" class="lg:hidden w-full bg-white border border-slate-200 text-slate-700 font-bold py-3.5 px-5 rounded-xl shadow-sm mb-4 flex justify-between items-center active:scale-[0.99] transition-transform">
+                <span class="flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-600"></i> Filtreler & Ayarlar</span>
+                <i id="filterArrow" class="fa-solid fa-chevron-down transition-transform duration-300 text-slate-400"></i>
+            </button>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Sol Menü -->
+                <aside class="lg:col-span-3">
+                    <div id="mobileFilters" class="filters-closed lg:sticky lg:top-24 space-y-4">
+                        <div class="card p-5 border-t-4 border-blue-600 space-y-5">
+                            <div class="flex justify-between items-center pb-2 border-b border-slate-100 lg:hidden">
+                                <span class="text-xs font-bold text-slate-400 uppercase">Kontrol Paneli</span>
+                            </div>
+
+                            <!-- Dönem -->
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 uppercase block mb-1.5">Dönem</label>
+                                <div class="relative">
+                                    <select id="periodSelect" onchange="updateTableOptions()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-3 outline-none appearance-none font-bold focus:ring-2 focus:ring-blue-500 transition"></select>
+                                    <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-xs text-slate-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+
+                            <!-- Tablo Kaynağı -->
+                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                                <label class="text-xs font-bold text-blue-800 uppercase block mb-1.5">Veri Kaynağı</label>
+                                <select id="tableSelect" onchange="renderDashboard()" class="w-full bg-white border border-blue-200 text-blue-900 text-sm rounded-lg p-2 outline-none font-bold"></select>
+                            </div>
+
+                            <!-- Slider -->
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-xs font-bold text-slate-500 uppercase">İlk N Kayıt</label>
+                                    <span id="topNLabel" class="text-xs font-bold bg-slate-800 text-white px-2 py-0.5 rounded">10</span>
+                                </div>
+                                <input type="range" id="topNRange" min="5" max="50" value="10" oninput="document.getElementById('topNLabel').innerText = this.value; renderDashboard()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                            </div>
+
+                            <!-- Ülke Seçimi -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <label class="text-xs font-bold text-slate-500 uppercase">Ülkeler</label>
+                                    <button onclick="clearCountrySelection()" class="text-[10px] text-red-500 font-bold hover:bg-red-50 px-2 py-1 rounded transition">Temizle</button>
+                                </div>
+                                <select id="countrySelect" multiple onchange="renderDashboard()" class="w-full border border-slate-200 rounded-lg p-2 h-32 text-sm bg-slate-50 text-slate-600"></select>
+                            </div>
+
+                            <button onclick="location.reload()" class="w-full py-3 rounded-xl border border-red-100 text-red-600 font-bold text-sm hover:bg-red-50 transition mt-2">
+                                <i class="fa-solid fa-rotate-left mr-2"></i> Sıfırla
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Ana İçerik -->
+                <main class="lg:col-span-9 space-y-5">
+                    
+                    <!-- KPI Kartları (Yatay Kaydırma) -->
+                    <div class="flex overflow-x-auto pb-4 -mx-4 px-4 gap-3 lg:grid lg:grid-cols-4 lg:mx-0 lg:px-0 lg:pb-0 scrollbar-hide snap-x">
+                        <div class="card p-4 min-w-[150px] snap-center border-l-4 border-slate-300">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">2024</p>
+                            <h3 id="kpi2024" class="text-xl font-black text-slate-700 mt-1">0</h3>
+                        </div>
+                        <div class="card p-4 min-w-[150px] snap-center border-l-4 border-blue-600 bg-blue-50/50">
+                            <p class="text-[10px] font-bold text-blue-600 uppercase">2025</p>
+                            <h3 id="kpi2025" class="text-xl font-black text-blue-700 mt-1">0</h3>
+                        </div>
+                        <div class="card p-4 min-w-[150px] snap-center border-l-4 border-emerald-500">
+                            <p class="text-[10px] font-bold text-emerald-600 uppercase">Büyüme</p>
+                            <h3 id="kpiGrowth" class="text-xl font-black text-emerald-600 mt-1">%0</h3>
+                        </div>
+                        <div class="card p-4 min-w-[150px] snap-center border-l-4 border-indigo-500">
+                            <p class="text-[10px] font-bold text-indigo-600 uppercase">Lider</p>
+                            <h3 id="kpiTopMarket" class="text-lg font-black text-indigo-700 mt-1 truncate">-</h3>
+                        </div>
+                    </div>
+
+                    <!-- Grafik -->
+                    <div class="card p-4 lg:p-6 relative" id="barChartCard">
+                        <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                            <h3 class="font-bold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-column text-blue-500"></i> Analiz
+                            </h3>
+                            <button onclick="downloadImage('barChartCard')" class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition">
+                                <i class="fa-solid fa-camera"></i>
+                            </button>
+                        </div>
+                        <div id="barChart" class="w-full h-[350px] lg:h-[450px]"></div>
+                        
+                        <!-- Bilgi Notu -->
+                        <div id="chartInfoNote" class="mt-4 hidden"></div>
+                    </div>
+
+                    <!-- Alt Bölüm -->
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <div class="card p-4" id="pieChartCard">
+                            <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
+                                <h3 class="font-bold text-slate-700 flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-pie text-orange-500"></i> Pazar Payı
+                                </h3>
+                                <button onclick="downloadImage('pieChartCard')" class="text-slate-400 hover:text-orange-500"><i class="fa-solid fa-camera"></i></button>
+                            </div>
+                            <div id="pieChart" class="w-full h-[300px]"></div>
+                        </div>
+
+                        <div class="card flex flex-col" id="tableCard">
+                            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                                <h3 class="font-bold text-slate-700"><i class="fa-solid fa-table text-emerald-600 mr-2"></i>Veriler</h3>
+                                <div class="flex gap-2">
+                                    <button onclick="downloadExcel()" class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition">Excel</button>
+                                    <button onclick="downloadImage('tableCard')" class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition">Resim</button>
+                                </div>
+                            </div>
+                            <div class="table-container bg-white p-1 flex-grow">
+                                <table class="w-full text-xs text-left text-slate-600">
+                                    <thead class="text-[10px] text-slate-400 uppercase bg-slate-50 sticky top-0 z-10">
+                                        <tr>
+                                            <th class="px-3 py-3 font-bold">Ülke</th>
+                                            <th class="px-2 py-3 text-right">2024</th>
+                                            <th class="px-2 py-3 text-right text-blue-600 font-bold">2025</th>
+                                            <th class="px-2 py-3 text-right">Fark</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dataTableBody" class="divide-y divide-slate-50"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- YARDIM MODALI -->
+    <div id="helpModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Nasıl Kullanılır?</h3>
+                <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-4 text-sm text-slate-600">
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 font-bold">1</div>
+                    <p>Excel tablonuzu (xls, xlsx) <b>Veri Yükle</b> alanına dokunarak seçin.</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 font-bold">2</div>
+                    <p>Sol menüden (veya Filtreler butonundan) <b>Dönem</b> ve <b>Tablo</b> seçimi yapın.</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 font-bold">3</div>
+                    <p>Grafikleri indirmek için sağ üstteki <i class="fa-solid fa-camera mx-1"></i> ikonuna basın.</p>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg text-yellow-800 text-xs mt-2 border border-yellow-100">
+                    <b>İpucu:</b> Telefonu yan çevirirseniz grafikler daha geniş görünür.
+                </div>
+            </div>
+            <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold mt-6">Anladım</button>
+        </div>
+    </div>
+
+    <!-- Yükleme Göstergesi -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/90 z-[60] hidden flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+        <span class="text-sm font-bold text-slate-600 animate-pulse">Veriler İşleniyor...</span>
+    </div>
+
+    <script>
+        // --- TEMEL FONKSİYONLAR ---
+        function toggleFilters() {
+            const el = document.getElementById('mobileFilters');
+            const arrow = document.getElementById('filterArrow');
+            if (el.classList.contains('filters-closed')) {
+                el.classList.remove('filters-closed');
+                el.classList.add('filters-open');
+                arrow.classList.add('rotate-180');
+            } else {
+                el.classList.add('filters-closed');
+                el.classList.remove('filters-open');
+                arrow.classList.remove('rotate-180');
+            }
+        }
+
+        function downloadImage(id) {
+            const el = document.getElementById(id);
+            const btns = el.querySelectorAll('button');
+            btns.forEach(b => b.style.opacity = '0');
+            
+            html2canvas(el, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Antalya_Turizm_Gorsel.png';
+                link.href = canvas.toDataURL("image/png");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                btns.forEach(b => b.style.opacity = '1');
+            }).catch(() => {
+                alert("Görsel oluşturulamadı.");
+                btns.forEach(b => b.style.opacity = '1');
+            });
+        }
+
+        // --- VERİ İŞLEME MANTIĞI ---
+        let globalData = [];
+        let availableTables = {};
+        const monthMap = { "ocak": "01-Ocak", "subat": "02-Şubat", "mart": "03-Mart", "nisan": "04-Nisan", "mayis": "05-Mayıs", "haziran": "06-Haziran", "temmuz": "07-Temmuz", "agustos": "08-Ağustos", "eylul": "09-Eylül", "ekim": "10-Ekim", "kasim": "11-Kasım", "aralik": "12-Aralık" };
+
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files.length) return;
+
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('flex');
+
+            setTimeout(async () => {
+                globalData = []; availableTables = {};
+                try {
+                    for (let file of files) await processFile(file);
+                    
+                    if (globalData.length > 0) {
+                        document.getElementById('uploadSection').style.display = 'none';
+                        document.getElementById('dashboard').classList.remove('hidden');
+                        initDashboard();
+                    } else {
+                        alert("Dosyadan uygun veri okunamadı. Lütfen formatı kontrol edin.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Bir hata oluştu: " + err.message);
+                } finally {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    document.getElementById('loadingOverlay').classList.remove('flex');
+                }
+            }, 100);
+        });
+
+        function processFile(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                let period = "Bilinmeyen";
+                const fName = file.name.toLocaleLowerCase('tr-TR');
+                
+                for(let [k,v] of Object.entries(monthMap)) {
+                    if(fName.includes(k) || fName.replace('ı','i').includes(k)) {
+                        let year = fName.includes("2024") ? "2024" : (fName.includes("2026") ? "2026" : "2025");
+                        period = `${v} ${year}`;
+                        break;
+                    }
+                }
+
+                if (!availableTables[period]) availableTables[period] = [];
+
+                reader.onload = (e) => {
+                    try {
+                        const wb = XLSX.read(e.target.result, { type: 'array' });
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+
+                        let currentTableName = "Tablo";
+                        let tableId = availableTables[period].length;
+                        
+                        // Tablo Bulma Mantığı
+                        for(let i=0; i<json.length; i++) {
+                            const row = json[i];
+                            const rowStr = JSON.stringify(row).toUpperCase();
+
+                            // Başlık satırı tespiti
+                            if(rowStr.includes("2024") && rowStr.includes("2025") && (rowStr.includes("MİLLİYET") || rowStr.includes("ÜLKE"))) {
+                                
+                                // Tablo ismini bir üst satırdan tahmin et
+                                if(i>0 && json[i-1][0]) currentTableName = json[i-1].join(' ').trim().substring(0, 50);
+                                else currentTableName = `Tablo ${tableId+1}`;
+
+                                const tObj = { id: tableId, name: currentTableName, t24:0, t25:0 };
+                                availableTables[period].push(tObj);
+
+                                // Sütun indekslerini bul
+                                let idxName = row.findIndex(c => c && c.toString().toUpperCase().match(/MİLLİYET|ÜLKE|ULKE/));
+                                let idx24 = row.findIndex(c => c && c.toString().includes("2024"));
+                                let idx25 = row.findIndex(c => c && c.toString().includes("2025"));
+
+                                if(idxName === -1) idxName = 0;
+                                if(idx24 === -1) idx24 = 4; // Varsayılan
+                                if(idx25 === -1) idx25 = 5; // Varsayılan
+
+                                // Verileri Oku
+                                for(let j=i+1; j<json.length; j++) {
+                                    const dRow = json[j];
+                                    if(!dRow) continue;
+                                    
+                                    // Yeni bir başlık geldiyse dur
+                                    if(JSON.stringify(dRow).includes("2024") && JSON.stringify(dRow).includes("MİLLİYET")) { i=j-1; break; }
+
+                                    let nation = dRow[idxName];
+                                    if(!nation || typeof nation !== 'string' || nation.length < 2) continue;
+                                    
+                                    nation = nation.trim();
+                                    // İstenmeyen satırları atla
+                                    const blacklist = ["TOPLAM", "DAĞILIM", "YEKÜN", "AVRUPA", "ASYA", "AFRİKA", "B.D.T", "CIS", "AMERİKA", "LİSTE SONU"];
+                                    if(blacklist.some(b => nation.toUpperCase().includes(b))) continue;
+
+                                    let v24 = parseNum(dRow[idx24]);
+                                    let v25 = parseNum(dRow[idx25]);
+
+                                    globalData.push({ p: period, tId: tableId, n: nation, v24, v25 });
+                                }
+                                tableId++;
+                            }
+                        }
+                        resolve();
+                    } catch(err) { console.error(err); resolve(); }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function parseNum(val) {
+            if(typeof val === 'number') return val;
+            if(!val) return 0;
+            let s = val.toString();
+            s = s.replace(/\./g, '').replace(',', '.'); // TR formatı düzeltme
+            return parseFloat(s) || 0;
+        }
+
+        // --- GÖRSELLEŞTİRME ---
+        function initDashboard() {
+            const periods = [...new Set(globalData.map(d => d.p))].sort().reverse();
+            fillSelect('periodSelect', periods);
+            updateTableOptions();
+        }
+
+        function fillSelect(id, items, valueKey=null, textKey=null) {
+            const sel = document.getElementById(id);
+            sel.innerHTML = "";
+            items.forEach(i => {
+                const opt = document.createElement('option');
+                opt.value = valueKey ? i[valueKey] : i;
+                opt.innerText = textKey ? i[textKey] : i;
+                sel.appendChild(opt);
+            });
+        }
+
+        function updateTableOptions() {
+            const p = document.getElementById('periodSelect').value;
+            const tables = availableTables[p] || [];
+            fillSelect('tableSelect', tables, 'id', 'name');
+            if(tables.length) document.getElementById('tableSelect').value = tables[tables.length-1].id;
+            renderDashboard();
+        }
+
+        function renderDashboard() {
+            const p = document.getElementById('periodSelect').value;
+            const tId = parseInt(document.getElementById('tableSelect').value);
+            const topN = parseInt(document.getElementById('topNRange').value);
+            const countries = Array.from(document.getElementById('countrySelect').selectedOptions).map(o=>o.value);
+
+            let raw = globalData.filter(d => d.p === p && d.tId === tId);
+            
+            // Veriyi Birleştir
+            const agg = {};
+            raw.forEach(r => {
+                const k = r.n.toUpperCase();
+                if(!agg[k]) agg[k] = { n: r.n, v24:0, v25:0 };
+                agg[k].v24 += r.v24; agg[k].v25 += r.v25;
+            });
+            
+            let data = Object.values(agg).sort((a,b) => b.v25 - a.v25);
+
+            // Ülke filtresini doldur (ilk açılışta veya değişince)
+            const cSel = document.getElementById('countrySelect');
+            if(cSel.options.length === 0 || cSel.getAttribute('data-p') !== p) {
+                cSel.innerHTML = "";
+                data.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.n; opt.innerText = d.n;
+                    if(countries.includes(d.n)) opt.selected = true;
+                    cSel.appendChild(opt);
+                });
+                cSel.setAttribute('data-p', p);
+            }
+
+            // Filtrele
+            let display = countries.length > 0 ? data.filter(d => countries.includes(d.n)) : data.slice(0, topN);
+
+            updateKPIs(display);
+            drawCharts(display);
+            drawTable(display);
+            showInfoNote(display);
+            window.dispatchEvent(new Event('resize'));
+        }
+
+        function updateKPIs(data) {
+            const t24 = data.reduce((a,b)=>a+b.v24,0);
+            const t25 = data.reduce((a,b)=>a+b.v25,0);
+            const growth = t24 > 0 ? ((t25-t24)/t24)*100 : 0;
+            
+            document.getElementById('kpi2024').innerText = t24.toLocaleString('tr-TR');
+            document.getElementById('kpi2025').innerText = t25.toLocaleString('tr-TR');
+            
+            const gEl = document.getElementById('kpiGrowth');
+            gEl.innerText = (growth>0?'+':'') + '%' + growth.toFixed(1);
+            gEl.className = `text-xl font-black mt-1 ${growth>=0 ? 'text-emerald-600' : 'text-red-600'}`;
+            
+            document.getElementById('kpiTopMarket').innerText = data.length ? data[0].n : '-';
+        }
+
+        function drawCharts(data) {
+            const isMobile = window.innerWidth < 768;
+            const names = data.map(d=>d.n);
+            
+            // Bar Chart
+            Plotly.newPlot('barChart', [
+                { x: names, y: data.map(d=>d.v24), name:'2024', type:'bar', marker:{color:'#cbd5e1'} },
+                { x: names, y: data.map(d=>d.v25), name:'2025', type:'bar', marker:{color:'#2563eb'}, text: data.map(d=>d.v25.toLocaleString()), textposition: 'auto' }
+            ], {
+                margin: { t:20, l:30, r:10, b: isMobile?80:50 },
+                xaxis: { tickangle: -45, tickfont:{size: isMobile?9:11} },
+                yaxis: { showgrid:true, gridcolor:'#f1f5f9' },
+                legend: { orientation:'h', y:1.1 },
+                paper_bgcolor:'rgba(0,0,0,0)',
+                plot_bgcolor:'rgba(0,0,0,0)'
+            }, {displayModeBar: false, responsive: true});
+
+            // Pie Chart
+            Plotly.newPlot('pieChart', [{
+                labels: names,
+                values: data.map(d=>d.v25),
+                type: 'pie',
+                hole: 0.6,
+                marker: { colors: ['#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe'] }
+            }], {
+                margin: {t:0,l:0,r:0,b:0},
+                showlegend: !isMobile,
+                paper_bgcolor:'rgba(0,0,0,0)'
+            }, {displayModeBar: false, responsive: true});
+        }
+
+        function drawTable(data) {
+            const tb = document.getElementById('dataTableBody');
+            tb.innerHTML = "";
+            data.forEach(d => {
+                const diff = d.v25 - d.v24;
+                tb.innerHTML += `
+                    <tr class="hover:bg-blue-50 border-b border-slate-50">
+                        <td class="px-3 py-2 font-medium truncate max-w-[100px]">${d.n}</td>
+                        <td class="px-2 py-2 text-right text-slate-400">${d.v24.toLocaleString('tr-TR')}</td>
+                        <td class="px-2 py-2 text-right font-bold text-blue-700">${d.v25.toLocaleString('tr-TR')}</td>
+                        <td class="px-2 py-2 text-right ${diff>=0?'text-green-600':'text-red-500'} font-bold text-[10px]">${diff>0?'+':''}${diff.toLocaleString()}</td>
+                    </tr>`;
+            });
+        }
+
+        function showInfoNote(data) {
+            const div = document.getElementById('chartInfoNote');
+            if(!data.length) { div.classList.add('hidden'); return; }
+            div.classList.remove('hidden');
+            
+            let html = `<div class="bg-indigo-50 rounded-lg p-3 border border-indigo-100 grid grid-cols-2 gap-2">`;
+            data.slice(0,4).forEach(d => {
+                const diff = d.v25 - d.v24;
+                html += `
+                    <div class="flex justify-between items-center text-[10px] bg-white px-2 py-1 rounded">
+                        <span class="font-bold text-slate-700 truncate mr-1">${d.n}</span>
+                        <span class="${diff>=0?'text-green-600':'text-red-600'} font-bold">${diff>0?'+':''}${diff.toLocaleString()}</span>
+                    </div>`;
+            });
+            html += `</div>`;
+            div.innerHTML = html;
+        }
+
+        function clearCountrySelection() {
+            Array.from(document.getElementById('countrySelect').options).forEach(o => o.selected = false);
+            renderDashboard();
+        }
+
+        function downloadExcel() {
+            // Basit Excel İndirme
+            const p = document.getElementById('periodSelect').value;
+            const tId = parseInt(document.getElementById('tableSelect').value);
+            let raw = globalData.filter(d => d.p === p && d.tId === tId);
+            
+            const ws = XLSX.utils.json_to_sheet(raw.map(r => ({
+                "Ülke": r.n, "2024": r.v24, "2025": r.v25, "Fark": r.v25-r.v24
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Veriler");
+            XLSX.writeFile(wb, "Turizm_Analiz.xlsx");
+        }
+    </script>
+</body>
+</html>

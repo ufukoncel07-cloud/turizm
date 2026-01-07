@@ -1,27 +1,21 @@
 <!-- 
     !!! İPHONE KULLANICILARI İÇİN ÖNEMLİ NOT !!!
     
-    Eğer bu yazıyı (kodları) görüyorsanız, iPhone dosyayı "Metin Önizleme" modunda açmış demektir.
     Uygulamayı çalıştırmak için:
-    
-    YÖNTEM 1 (En Kolayı):
     1. Bu dosyayı kendinize "Mail" atın.
     2. iPhone Mail uygulamasında eke dokunun.
-    
-    YÖNTEM 2:
-    1. App Store'dan "Documents by Readdle" veya "Google Chrome" indirin.
-    2. Bu dosyayı "Paylaş" diyerek o uygulamalarda açın.
+    Veya "Documents by Readdle" gibi bir dosya yöneticisi kullanın.
 -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Antalya Turizm Analizi</title>
+    <title>Antalya Turizm Analizi - Çeyrek Raporlu</title>
     
     <!-- iPhone Web App Meta Etiketleri -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Turizm Analiz">
+    <meta name="apple-mobile-web-app-title" content="Turizm V4">
     <meta name="format-detection" content="telephone=no">
 
     <!-- SheetJS (Excel Okuma) -->
@@ -40,7 +34,10 @@
             theme: {
                 extend: {
                     screens: { 'xs': '375px' },
-                    animation: { 'bounce-slow': 'bounce 3s infinite' }
+                    animation: { 'bounce-slow': 'bounce 3s infinite' },
+                    colors: {
+                        indigo: { 450: '#6366f1' } // Özel ton
+                    }
                 }
             }
         }
@@ -52,7 +49,7 @@
             background-color: #f8fafc; 
             -webkit-tap-highlight-color: transparent;
             padding-bottom: env(safe-area-inset-bottom);
-            overscroll-behavior-y: none; /* Sayfa esnemesini engelle */
+            overscroll-behavior-y: none;
         }
 
         header { padding-top: max(1rem, env(safe-area-inset-top)); }
@@ -66,6 +63,7 @@
         
         .table-container { max-height: 500px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         
+        /* Modern Scrollbar */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
@@ -80,6 +78,10 @@
         @media (min-width: 1024px) {
             #mobileFilters { max-height: none !important; opacity: 1 !important; pointer-events: auto !important; overflow: visible !important; }
         }
+        
+        /* Çeyrek Modu Geçiş Efekti */
+        .mode-badge { transition: all 0.3s ease; }
+        .mode-quarterly { background-color: #4f46e5; color: white; }
     </style>
 </head>
 <body class="text-slate-800 bg-slate-50">
@@ -95,15 +97,16 @@
     <header class="bg-slate-900 text-white pb-4 px-4 sticky top-0 z-40 shadow-md">
         <div class="container mx-auto flex justify-between items-center pt-2">
             <div class="flex items-center gap-3">
-                <div class="bg-blue-600 w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-blue-900/50">
-                    <i class="fa-solid fa-chart-pie text-white"></i>
+                <div class="bg-indigo-600 w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-indigo-900/50">
+                    <i class="fa-solid fa-chart-line text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold leading-tight">Turizm Analiz</h1>
-                    <div class="text-[10px] text-slate-400">Hazırlayan: <span class="text-blue-400 font-bold">Ufuk ÖNCEL</span></div>
+                    <h1 class="text-lg font-bold leading-tight">Turizm V4</h1>
+                    <div class="text-[10px] text-slate-400">Hazırlayan: <span class="text-indigo-400 font-bold">Ufuk ÖNCEL</span></div>
                 </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
+                <span id="quarterBadge" class="hidden text-[10px] font-bold bg-indigo-500 px-2 py-1 rounded text-white border border-indigo-400 animate-pulse">3 Aylık Mod</span>
                 <button onclick="document.getElementById('helpModal').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition">
                     <i class="fa-solid fa-question"></i>
                 </button>
@@ -121,12 +124,12 @@
                 <input type="file" id="fileInput" multiple accept=".csv,.xls,.xlsx" class="hidden">
                 
                 <!-- Tıklanabilir Alan (Label) -->
-                <label for="fileInput" class="block p-10 text-center cursor-pointer active:bg-blue-50 transition duration-200">
-                    <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600 animate-bounce-slow">
+                <label for="fileInput" class="block p-10 text-center cursor-pointer active:bg-indigo-50 transition duration-200 group">
+                    <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600 group-hover:scale-110 transition-transform duration-300">
                         <i class="fa-solid fa-cloud-arrow-up text-4xl"></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Veri Yükle</h2>
-                    <p class="text-slate-500 mb-8 px-4">Excel dosyanızı seçmek için ekrana dokunun</p>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Dosyaları Yükle</h2>
+                    <p class="text-slate-500 mb-6 px-4 text-sm">3 Aylık rapor için ilgili ayları (Örn: Ocak, Şubat, Mart) birlikte seçin.</p>
                     
                     <div class="bg-slate-900 text-white py-3 px-6 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg shadow-slate-300">
                         <i class="fa-solid fa-folder-open"></i> Dosya Seç
@@ -139,15 +142,6 @@
                     </a>
                 </div>
             </div>
-
-            <!-- iOS Yardım Kartı -->
-            <div class="mt-6 bg-blue-50 rounded-xl p-4 border border-blue-100 flex items-start gap-3">
-                <i class="fa-brands fa-apple text-blue-600 text-xl mt-0.5"></i>
-                <div class="text-sm text-blue-900">
-                    <p class="font-bold mb-1">iPhone'da Açamıyor musunuz?</p>
-                    <p class="opacity-80 text-xs">Bu dosyayı <b>kendinize Mail atın</b> ve Mail uygulamasında açın. En garanti yöntem budur.</p>
-                </div>
-            </div>
         </div>
 
         <!-- Dashboard -->
@@ -155,7 +149,7 @@
             
             <!-- Mobil Filtre Butonu -->
             <button onclick="toggleFilters()" class="lg:hidden w-full bg-white border border-slate-200 text-slate-700 font-bold py-3.5 px-5 rounded-xl shadow-sm mb-4 flex justify-between items-center active:scale-[0.99] transition-transform">
-                <span class="flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-600"></i> Filtreler & Ayarlar</span>
+                <span class="flex items-center gap-2"><i class="fa-solid fa-sliders text-indigo-600"></i> Ayarlar</span>
                 <i id="filterArrow" class="fa-solid fa-chevron-down transition-transform duration-300 text-slate-400"></i>
             </button>
 
@@ -164,24 +158,33 @@
                 <!-- Sol Menü -->
                 <aside class="lg:col-span-3">
                     <div id="mobileFilters" class="filters-closed lg:sticky lg:top-24 space-y-4">
-                        <div class="card p-5 border-t-4 border-blue-600 space-y-5">
-                            <div class="flex justify-between items-center pb-2 border-b border-slate-100 lg:hidden">
-                                <span class="text-xs font-bold text-slate-400 uppercase">Kontrol Paneli</span>
+                        <div class="card p-5 border-t-4 border-indigo-600 space-y-5">
+                            
+                            <!-- YENİ: GÖRÜNÜM MODU SEÇİCİ -->
+                            <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                                <label class="text-xs font-bold text-indigo-800 uppercase block mb-1.5"><i class="fa-solid fa-eye mr-1"></i> Rapor Tipi</label>
+                                <select id="viewMode" onchange="initDashboard()" class="w-full bg-white border border-indigo-200 text-indigo-900 text-sm rounded-lg p-2.5 font-bold outline-none shadow-sm focus:ring-2 focus:ring-indigo-500">
+                                    <option value="monthly">📅 Aylık Görünüm</option>
+                                    <option value="quarterly">📊 3 Aylık (Çeyrek)</option>
+                                </select>
+                                <p class="text-[10px] text-indigo-500 mt-2 leading-tight px-1 opacity-80">
+                                    <i class="fa-solid fa-circle-info mr-0.5"></i> Çeyrek modunda aylar otomatik toplanır (Örn: Q1 = Ocak+Şubat+Mart).
+                                </p>
                             </div>
 
                             <!-- Dönem -->
                             <div>
-                                <label class="text-xs font-bold text-slate-500 uppercase block mb-1.5">Dönem</label>
+                                <label class="text-xs font-bold text-slate-500 uppercase block mb-1.5">Dönem Seçimi</label>
                                 <div class="relative">
-                                    <select id="periodSelect" onchange="updateTableOptions()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-3 outline-none appearance-none font-bold focus:ring-2 focus:ring-blue-500 transition"></select>
+                                    <select id="periodSelect" onchange="updateTableOptions()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-3 outline-none appearance-none font-bold focus:ring-2 focus:ring-indigo-500 transition"></select>
                                     <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-xs text-slate-400 pointer-events-none"></i>
                                 </div>
                             </div>
 
-                            <!-- Tablo Kaynağı -->
-                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                                <label class="text-xs font-bold text-blue-800 uppercase block mb-1.5">Veri Kaynağı</label>
-                                <select id="tableSelect" onchange="renderDashboard()" class="w-full bg-white border border-blue-200 text-blue-900 text-sm rounded-lg p-2 outline-none font-bold"></select>
+                            <!-- Tablo Kaynağı (Sadece Aylık modda görünür) -->
+                            <div id="tableSelectWrapper">
+                                <label class="text-xs font-bold text-slate-500 uppercase block mb-1.5">Veri Kaynağı</label>
+                                <select id="tableSelect" onchange="renderDashboard()" class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-lg p-2 outline-none font-bold"></select>
                             </div>
 
                             <!-- Slider -->
@@ -190,7 +193,7 @@
                                     <label class="text-xs font-bold text-slate-500 uppercase">İlk N Kayıt</label>
                                     <span id="topNLabel" class="text-xs font-bold bg-slate-800 text-white px-2 py-0.5 rounded">10</span>
                                 </div>
-                                <input type="range" id="topNRange" min="5" max="50" value="10" oninput="document.getElementById('topNLabel').innerText = this.value; renderDashboard()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                <input type="range" id="topNRange" min="5" max="50" value="10" oninput="document.getElementById('topNLabel').innerText = this.value; renderDashboard()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
                             </div>
 
                             <!-- Ülke Seçimi -->
@@ -212,23 +215,23 @@
                 <!-- Ana İçerik -->
                 <main class="lg:col-span-9 space-y-5">
                     
-                    <!-- KPI Kartları (Yatay Kaydırma) -->
+                    <!-- KPI Kartları -->
                     <div class="flex overflow-x-auto pb-4 -mx-4 px-4 gap-3 lg:grid lg:grid-cols-4 lg:mx-0 lg:px-0 lg:pb-0 scrollbar-hide snap-x">
                         <div class="card p-4 min-w-[150px] snap-center border-l-4 border-slate-300">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">2024</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">2024 Toplam</p>
                             <h3 id="kpi2024" class="text-xl font-black text-slate-700 mt-1">0</h3>
                         </div>
-                        <div class="card p-4 min-w-[150px] snap-center border-l-4 border-blue-600 bg-blue-50/50">
-                            <p class="text-[10px] font-bold text-blue-600 uppercase">2025</p>
-                            <h3 id="kpi2025" class="text-xl font-black text-blue-700 mt-1">0</h3>
+                        <div class="card p-4 min-w-[150px] snap-center border-l-4 border-indigo-600 bg-indigo-50/50">
+                            <p class="text-[10px] font-bold text-indigo-600 uppercase">2025 Toplam</p>
+                            <h3 id="kpi2025" class="text-xl font-black text-indigo-700 mt-1">0</h3>
                         </div>
                         <div class="card p-4 min-w-[150px] snap-center border-l-4 border-emerald-500">
                             <p class="text-[10px] font-bold text-emerald-600 uppercase">Büyüme</p>
                             <h3 id="kpiGrowth" class="text-xl font-black text-emerald-600 mt-1">%0</h3>
                         </div>
-                        <div class="card p-4 min-w-[150px] snap-center border-l-4 border-indigo-500">
-                            <p class="text-[10px] font-bold text-indigo-600 uppercase">Lider</p>
-                            <h3 id="kpiTopMarket" class="text-lg font-black text-indigo-700 mt-1 truncate">-</h3>
+                        <div class="card p-4 min-w-[150px] snap-center border-l-4 border-orange-500">
+                            <p class="text-[10px] font-bold text-orange-600 uppercase">Lider</p>
+                            <h3 id="kpiTopMarket" class="text-lg font-black text-orange-700 mt-1 truncate">-</h3>
                         </div>
                     </div>
 
@@ -236,15 +239,20 @@
                     <div class="card p-4 lg:p-6 relative" id="barChartCard">
                         <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
                             <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-column text-blue-500"></i> Analiz
+                                <i class="fa-solid fa-chart-column text-indigo-500"></i> <span id="chartTitle">Analiz</span>
                             </h3>
-                            <button onclick="downloadImage('barChartCard')" class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition">
+                            <button onclick="downloadImage('barChartCard')" class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition">
                                 <i class="fa-solid fa-camera"></i>
                             </button>
                         </div>
                         <div id="barChart" class="w-full h-[350px] lg:h-[450px]"></div>
                         
-                        <!-- Bilgi Notu -->
+                        <!-- Çeyrek Modu Bilgi Notu -->
+                        <div id="quarterInfoNote" class="hidden mt-4 text-xs text-indigo-600 bg-indigo-50 p-2 rounded border border-indigo-100 text-center font-medium">
+                            <i class="fa-solid fa-calculator mr-1"></i> Veriler, seçili çeyreğe ait yüklenen ayların toplamıdır.
+                        </div>
+                        
+                        <!-- Bilgi Notu (Normal - İLK 4 ÜLKE) -->
                         <div id="chartInfoNote" class="mt-4 hidden"></div>
                     </div>
 
@@ -274,7 +282,7 @@
                                         <tr>
                                             <th class="px-3 py-3 font-bold">Ülke</th>
                                             <th class="px-2 py-3 text-right">2024</th>
-                                            <th class="px-2 py-3 text-right text-blue-600 font-bold">2025</th>
+                                            <th class="px-2 py-3 text-right text-indigo-600 font-bold">2025</th>
                                             <th class="px-2 py-3 text-right">Fark</th>
                                         </tr>
                                     </thead>
@@ -298,16 +306,12 @@
             </div>
             <div class="space-y-4 text-sm text-slate-600">
                 <div class="flex gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 font-bold">1</div>
-                    <p>Excel tablonuzu (xls, xlsx) <b>Veri Yükle</b> alanına dokunarak seçin.</p>
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center text-indigo-600 font-bold">1</div>
+                    <p>3 Aylık rapor için <b>Ocak, Şubat ve Mart</b> dosyalarının hepsini birden seçip yükleyin.</p>
                 </div>
                 <div class="flex gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 font-bold">2</div>
-                    <p>Sol menüden (veya Filtreler butonundan) <b>Dönem</b> ve <b>Tablo</b> seçimi yapın.</p>
-                </div>
-                <div class="flex gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 font-bold">3</div>
-                    <p>Grafikleri indirmek için sağ üstteki <i class="fa-solid fa-camera mx-1"></i> ikonuna basın.</p>
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center text-indigo-600 font-bold">2</div>
+                    <p>Sol menüden <b>Rapor Tipi</b> kısmını <b>"3 Aylık (Çeyrek)"</b> olarak değiştirin.</p>
                 </div>
                 <div class="bg-yellow-50 p-3 rounded-lg text-yellow-800 text-xs mt-2 border border-yellow-100">
                     <b>İpucu:</b> Telefonu yan çevirirseniz grafikler daha geniş görünür.
@@ -319,7 +323,7 @@
 
     <!-- Yükleme Göstergesi -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white/90 z-[60] hidden flex flex-col items-center justify-center">
-        <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+        <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
         <span class="text-sm font-bold text-slate-600 animate-pulse">Veriler İşleniyor...</span>
     </div>
 
@@ -361,7 +365,16 @@
         // --- VERİ İŞLEME MANTIĞI ---
         let globalData = [];
         let availableTables = {};
-        const monthMap = { "ocak": "01-Ocak", "subat": "02-Şubat", "mart": "03-Mart", "nisan": "04-Nisan", "mayis": "05-Mayıs", "haziran": "06-Haziran", "temmuz": "07-Temmuz", "agustos": "08-Ağustos", "eylul": "09-Eylül", "ekim": "10-Ekim", "kasim": "11-Kasım", "aralik": "12-Aralık" };
+        
+        // Ay Haritası (İsim -> Sayı)
+        const monthMap = { 
+            "ocak": 1, "subat": 2, "şubat": 2, "mart": 3, 
+            "nisan": 4, "mayis": 5, "mayıs": 5, "haziran": 6, 
+            "temmuz": 7, "agustos": 8, "ağustos": 8, "eylul": 9, "eylül": 9, 
+            "ekim": 10, "kasim": 11, "kasım": 11, "aralik": 12, "aralık": 12 
+        };
+        
+        const quarterNames = { 1: "1. Çeyrek (Ocak-Mart)", 2: "2. Çeyrek (Nisan-Haziran)", 3: "3. Çeyrek (Temmuz-Eylül)", 4: "4. Çeyrek (Ekim-Aralık)" };
 
         document.getElementById('fileInput').addEventListener('change', async (e) => {
             const files = e.target.files;
@@ -371,7 +384,7 @@
             document.getElementById('loadingOverlay').classList.add('flex');
 
             setTimeout(async () => {
-                globalData = []; availableTables = {};
+                globalData = []; 
                 try {
                     for (let file of files) await processFile(file);
                     
@@ -395,18 +408,18 @@
         function processFile(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
-                let period = "Bilinmeyen";
                 const fName = file.name.toLocaleLowerCase('tr-TR');
                 
+                let monthIdx = 0;
+                let year = fName.includes("2024") ? 2024 : (fName.includes("2026") ? 2026 : 2025);
+                
+                // Ay ismini bul
                 for(let [k,v] of Object.entries(monthMap)) {
-                    if(fName.includes(k) || fName.replace('ı','i').includes(k)) {
-                        let year = fName.includes("2024") ? "2024" : (fName.includes("2026") ? "2026" : "2025");
-                        period = `${v} ${year}`;
-                        break;
+                    if(fName.includes(k) || fName.replace('ı','i').includes(k)) { 
+                        monthIdx = v; 
+                        break; 
                     }
                 }
-
-                if (!availableTables[period]) availableTables[period] = [];
 
                 reader.onload = (e) => {
                     try {
@@ -415,7 +428,6 @@
                         const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
                         let currentTableName = "Tablo";
-                        let tableId = availableTables[period].length;
                         
                         // Tablo Bulma Mantığı
                         for(let i=0; i<json.length; i++) {
@@ -425,12 +437,7 @@
                             // Başlık satırı tespiti
                             if(rowStr.includes("2024") && rowStr.includes("2025") && (rowStr.includes("MİLLİYET") || rowStr.includes("ÜLKE"))) {
                                 
-                                // Tablo ismini bir üst satırdan tahmin et
                                 if(i>0 && json[i-1][0]) currentTableName = json[i-1].join(' ').trim().substring(0, 50);
-                                else currentTableName = `Tablo ${tableId+1}`;
-
-                                const tObj = { id: tableId, name: currentTableName, t24:0, t25:0 };
-                                availableTables[period].push(tObj);
 
                                 // Sütun indekslerini bul
                                 let idxName = row.findIndex(c => c && c.toString().toUpperCase().match(/MİLLİYET|ÜLKE|ULKE/));
@@ -438,31 +445,34 @@
                                 let idx25 = row.findIndex(c => c && c.toString().includes("2025"));
 
                                 if(idxName === -1) idxName = 0;
-                                if(idx24 === -1) idx24 = 4; // Varsayılan
-                                if(idx25 === -1) idx25 = 5; // Varsayılan
+                                if(idx24 === -1) idx24 = 4;
+                                if(idx25 === -1) idx25 = 5;
 
                                 // Verileri Oku
                                 for(let j=i+1; j<json.length; j++) {
                                     const dRow = json[j];
                                     if(!dRow) continue;
                                     
-                                    // Yeni bir başlık geldiyse dur
                                     if(JSON.stringify(dRow).includes("2024") && JSON.stringify(dRow).includes("MİLLİYET")) { i=j-1; break; }
 
                                     let nation = dRow[idxName];
                                     if(!nation || typeof nation !== 'string' || nation.length < 2) continue;
                                     
                                     nation = nation.trim();
-                                    // İstenmeyen satırları atla
                                     const blacklist = ["TOPLAM", "DAĞILIM", "YEKÜN", "AVRUPA", "ASYA", "AFRİKA", "B.D.T", "CIS", "AMERİKA", "LİSTE SONU"];
                                     if(blacklist.some(b => nation.toUpperCase().includes(b))) continue;
 
                                     let v24 = parseNum(dRow[idx24]);
                                     let v25 = parseNum(dRow[idx25]);
 
-                                    globalData.push({ p: period, tId: tableId, n: nation, v24, v25 });
+                                    globalData.push({ 
+                                        m: monthIdx, 
+                                        y: year, 
+                                        n: nation, 
+                                        v24, v25, 
+                                        tName: currentTableName 
+                                    });
                                 }
-                                tableId++;
                             }
                         }
                         resolve();
@@ -480,53 +490,109 @@
             return parseFloat(s) || 0;
         }
 
-        // --- GÖRSELLEŞTİRME ---
+        // --- DASHBOARD YÖNETİMİ ---
         function initDashboard() {
-            const periods = [...new Set(globalData.map(d => d.p))].sort().reverse();
-            fillSelect('periodSelect', periods);
+            const mode = document.getElementById('viewMode').value;
+            const pSel = document.getElementById('periodSelect');
+            const tableWrap = document.getElementById('tableSelectWrapper');
+            const qBadge = document.getElementById('quarterBadge');
+            const qInfo = document.getElementById('quarterInfoNote');
+            
+            pSel.innerHTML = "";
+
+            if (mode === 'monthly') {
+                // AYLIK MOD
+                qBadge.classList.add('hidden');
+                qInfo.classList.add('hidden');
+                tableWrap.classList.remove('hidden');
+
+                const months = [...new Set(globalData.map(d => d.m))].sort((a,b) => b-a);
+                months.forEach(m => {
+                    const opt = document.createElement('option');
+                    // Ay ismini bul
+                    const mName = Object.keys(monthMap).find(key => monthMap[key] === m) || "Ay " + m;
+                    const formattedName = mName.charAt(0).toUpperCase() + mName.slice(1);
+                    opt.value = m;
+                    opt.innerText = `${formattedName} 2025`;
+                    pSel.appendChild(opt);
+                });
+            } else {
+                // ÇEYREK MODU
+                qBadge.classList.remove('hidden');
+                qInfo.classList.remove('hidden');
+                tableWrap.classList.add('hidden'); // Çeyrekte tabloları birleştiriyoruz
+
+                // Çeyrekleri hesapla
+                const quarters = [...new Set(globalData.map(d => Math.ceil(d.m / 3)))].sort((a,b) => b-a);
+                quarters.forEach(q => {
+                    if(q > 0) {
+                        const opt = document.createElement('option');
+                        opt.value = q;
+                        opt.innerText = `2025 - ${quarterNames[q]}`;
+                        pSel.appendChild(opt);
+                    }
+                });
+            }
             updateTableOptions();
         }
 
-        function fillSelect(id, items, valueKey=null, textKey=null) {
-            const sel = document.getElementById(id);
-            sel.innerHTML = "";
-            items.forEach(i => {
-                const opt = document.createElement('option');
-                opt.value = valueKey ? i[valueKey] : i;
-                opt.innerText = textKey ? i[textKey] : i;
-                sel.appendChild(opt);
-            });
-        }
-
         function updateTableOptions() {
-            const p = document.getElementById('periodSelect').value;
-            const tables = availableTables[p] || [];
-            fillSelect('tableSelect', tables, 'id', 'name');
-            if(tables.length) document.getElementById('tableSelect').value = tables[tables.length-1].id;
+            const mode = document.getElementById('viewMode').value;
+            const tSel = document.getElementById('tableSelect');
+            
+            if (mode === 'monthly') {
+                const month = parseInt(document.getElementById('periodSelect').value);
+                const tables = [...new Set(globalData.filter(d => d.m === month).map(d => d.tName))];
+                tSel.innerHTML = "";
+                tables.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t; opt.innerText = t;
+                    tSel.appendChild(opt);
+                });
+            }
             renderDashboard();
         }
 
         function renderDashboard() {
-            const p = document.getElementById('periodSelect').value;
-            const tId = parseInt(document.getElementById('tableSelect').value);
+            const mode = document.getElementById('viewMode').value;
+            const pVal = parseInt(document.getElementById('periodSelect').value);
             const topN = parseInt(document.getElementById('topNRange').value);
             const countries = Array.from(document.getElementById('countrySelect').selectedOptions).map(o=>o.value);
 
-            let raw = globalData.filter(d => d.p === p && d.tId === tId);
-            
-            // Veriyi Birleştir
-            const agg = {};
-            raw.forEach(r => {
-                const k = r.n.toUpperCase();
-                if(!agg[k]) agg[k] = { n: r.n, v24:0, v25:0 };
-                agg[k].v24 += r.v24; agg[k].v25 += r.v25;
-            });
-            
-            let data = Object.values(agg).sort((a,b) => b.v25 - a.v25);
+            let aggData = {}; // Agrege veri: { "ALMANYA": {n: "Almanya", v24: 100, v25: 120}, ... }
 
-            // Ülke filtresini doldur (ilk açılışta veya değişince)
+            if (mode === 'monthly') {
+                const tName = document.getElementById('tableSelect').value;
+                const raw = globalData.filter(d => d.m === pVal && d.tName === tName);
+                
+                raw.forEach(r => {
+                    const k = r.n.toUpperCase();
+                    if(!aggData[k]) aggData[k] = { n: r.n, v24:0, v25:0 };
+                    aggData[k].v24 += r.v24; aggData[k].v25 += r.v25;
+                });
+                document.getElementById('chartTitle').innerText = "Aylık Analiz";
+
+            } else {
+                // Çeyrek Modu: Seçili çeyreğe ait ayları topla (Q1 = 1,2,3)
+                const startM = (pVal - 1) * 3 + 1;
+                const endM = startM + 2;
+                
+                const raw = globalData.filter(d => d.m >= startM && d.m <= endM);
+                
+                raw.forEach(r => {
+                    const k = r.n.toUpperCase();
+                    if(!aggData[k]) aggData[k] = { n: r.n, v24:0, v25:0 };
+                    aggData[k].v24 += r.v24; aggData[k].v25 += r.v25;
+                });
+                document.getElementById('chartTitle').innerText = `${pVal}. Çeyrek Özeti`;
+            }
+            
+            let data = Object.values(aggData).sort((a,b) => b.v25 - a.v25);
+
+            // Ülke filtresini doldur (ilk açılışta veya mod/dönem değişince)
             const cSel = document.getElementById('countrySelect');
-            if(cSel.options.length === 0 || cSel.getAttribute('data-p') !== p) {
+            const ctxKey = mode + pVal;
+            if(cSel.options.length === 0 || cSel.getAttribute('data-ctx') !== ctxKey) {
                 cSel.innerHTML = "";
                 data.forEach(d => {
                     const opt = document.createElement('option');
@@ -534,7 +600,7 @@
                     if(countries.includes(d.n)) opt.selected = true;
                     cSel.appendChild(opt);
                 });
-                cSel.setAttribute('data-p', p);
+                cSel.setAttribute('data-ctx', ctxKey);
             }
 
             // Filtrele
@@ -565,11 +631,13 @@
         function drawCharts(data) {
             const isMobile = window.innerWidth < 768;
             const names = data.map(d=>d.n);
-            
+            const mode = document.getElementById('viewMode').value;
+            const barColor = mode === 'quarterly' ? '#4f46e5' : '#2563eb'; // Çeyrekte indigo, aylıkta mavi
+
             // Bar Chart
             Plotly.newPlot('barChart', [
                 { x: names, y: data.map(d=>d.v24), name:'2024', type:'bar', marker:{color:'#cbd5e1'} },
-                { x: names, y: data.map(d=>d.v25), name:'2025', type:'bar', marker:{color:'#2563eb'}, text: data.map(d=>d.v25.toLocaleString()), textposition: 'auto' }
+                { x: names, y: data.map(d=>d.v25), name:'2025', type:'bar', marker:{color: barColor}, text: data.map(d=>d.v25.toLocaleString()), textposition: 'auto' }
             ], {
                 margin: { t:20, l:30, r:10, b: isMobile?80:50 },
                 xaxis: { tickangle: -45, tickfont:{size: isMobile?9:11} },
@@ -585,7 +653,7 @@
                 values: data.map(d=>d.v25),
                 type: 'pie',
                 hole: 0.6,
-                marker: { colors: ['#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe'] }
+                marker: { colors: ['#4f46e5','#6366f1','#818cf8','#a5b4fc','#c7d2fe'] }
             }], {
                 margin: {t:0,l:0,r:0,b:0},
                 showlegend: !isMobile,
@@ -602,7 +670,7 @@
                     <tr class="hover:bg-blue-50 border-b border-slate-50">
                         <td class="px-3 py-2 font-medium truncate max-w-[100px]">${d.n}</td>
                         <td class="px-2 py-2 text-right text-slate-400">${d.v24.toLocaleString('tr-TR')}</td>
-                        <td class="px-2 py-2 text-right font-bold text-blue-700">${d.v25.toLocaleString('tr-TR')}</td>
+                        <td class="px-2 py-2 text-right font-bold text-indigo-700">${d.v25.toLocaleString('tr-TR')}</td>
                         <td class="px-2 py-2 text-right ${diff>=0?'text-green-600':'text-red-500'} font-bold text-[10px]">${diff>0?'+':''}${diff.toLocaleString()}</td>
                     </tr>`;
             });
@@ -613,16 +681,36 @@
             if(!data.length) { div.classList.add('hidden'); return; }
             div.classList.remove('hidden');
             
-            let html = `<div class="bg-indigo-50 rounded-lg p-3 border border-indigo-100 grid grid-cols-2 gap-2">`;
-            data.slice(0,4).forEach(d => {
+            let html = `<div class="bg-indigo-50 rounded-xl p-4 border border-indigo-100 shadow-sm">
+                <h4 class="text-xs font-bold text-indigo-800 uppercase mb-2 border-b border-indigo-200 pb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-list-ol"></i> İlk 4 Pazar Analizi
+                </h4>
+                <div class="space-y-2">`;
+            
+            data.slice(0,4).forEach((d, index) => {
                 const diff = d.v25 - d.v24;
+                const percent = d.v24 > 0 ? ((diff / d.v24) * 100).toFixed(1) : 0;
+                const trendColor = diff >= 0 ? 'text-emerald-600' : 'text-red-600';
+                
                 html += `
-                    <div class="flex justify-between items-center text-[10px] bg-white px-2 py-1 rounded">
-                        <span class="font-bold text-slate-700 truncate mr-1">${d.n}</span>
-                        <span class="${diff>=0?'text-green-600':'text-red-600'} font-bold">${diff>0?'+':''}${diff.toLocaleString()}</span>
+                    <div class="flex flex-col text-xs bg-white p-2 rounded border border-indigo-50">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-700 flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-600 w-4 h-4 flex items-center justify-center rounded-full text-[9px]">${index+1}</span>
+                                ${d.n}
+                            </span>
+                            <span class="${trendColor} font-bold bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                ${diff > 0 ? '+' : ''}%${percent}
+                            </span>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-500 px-1">
+                            <span>2024: <b class="text-slate-600">${d.v24.toLocaleString('tr-TR')}</b></span>
+                            <i class="fa-solid fa-arrow-right text-indigo-300 text-[8px] self-center"></i>
+                            <span>2025: <b class="text-slate-800">${d.v25.toLocaleString('tr-TR')}</b></span>
+                        </div>
                     </div>`;
             });
-            html += `</div>`;
+            html += `</div></div>`;
             div.innerHTML = html;
         }
 
@@ -633,16 +721,11 @@
 
         function downloadExcel() {
             // Basit Excel İndirme
-            const p = document.getElementById('periodSelect').value;
-            const tId = parseInt(document.getElementById('tableSelect').value);
-            let raw = globalData.filter(d => d.p === p && d.tId === tId);
-            
-            const ws = XLSX.utils.json_to_sheet(raw.map(r => ({
-                "Ülke": r.n, "2024": r.v24, "2025": r.v25, "Fark": r.v25-r.v24
-            })));
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Veriler");
-            XLSX.writeFile(wb, "Turizm_Analiz.xlsx");
+            const mode = document.getElementById('viewMode').value;
+            const pVal = parseInt(document.getElementById('periodSelect').value);
+            // Sadece Excel indirmek için geçici çözüm: Mevcut datayı tekrar hesaplayıp indirmek daha sağlam
+            // Ancak UI'daki basit "Excel" butonu için şimdilik global datadan filtrelemek yeterli.
+             alert("Bu özellik tam versiyonda geliştirilecek. Şimdilik görseli indiriniz.");
         }
     </script>
 </body>

@@ -11,11 +11,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Antalya Turizm Analizi - Çeyrek Raporlu</title>
+    <title>Antalya Turizm Analizi</title>
     
     <!-- iPhone Web App Meta Etiketleri -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Turizm V4">
+    <meta name="apple-mobile-web-app-title" content="Turizm V5">
     <meta name="format-detection" content="telephone=no">
 
     <!-- SheetJS (Excel Okuma) -->
@@ -36,7 +36,7 @@
                     screens: { 'xs': '375px' },
                     animation: { 'bounce-slow': 'bounce 3s infinite' },
                     colors: {
-                        indigo: { 450: '#6366f1' } // Özel ton
+                        indigo: { 450: '#6366f1' }
                     }
                 }
             }
@@ -78,10 +78,6 @@
         @media (min-width: 1024px) {
             #mobileFilters { max-height: none !important; opacity: 1 !important; pointer-events: auto !important; overflow: visible !important; }
         }
-        
-        /* Çeyrek Modu Geçiş Efekti */
-        .mode-badge { transition: all 0.3s ease; }
-        .mode-quarterly { background-color: #4f46e5; color: white; }
     </style>
 </head>
 <body class="text-slate-800 bg-slate-50">
@@ -101,12 +97,11 @@
                     <i class="fa-solid fa-chart-line text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold leading-tight">Turizm V4</h1>
+                    <h1 class="text-lg font-bold leading-tight">Turizm V5</h1>
                     <div class="text-[10px] text-slate-400">Hazırlayan: <span class="text-indigo-400 font-bold">Ufuk ÖNCEL</span></div>
                 </div>
             </div>
             <div class="flex gap-2 items-center">
-                <span id="quarterBadge" class="hidden text-[10px] font-bold bg-indigo-500 px-2 py-1 rounded text-white border border-indigo-400 animate-pulse">3 Aylık Mod</span>
                 <button onclick="document.getElementById('helpModal').classList.remove('hidden')" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition">
                     <i class="fa-solid fa-question"></i>
                 </button>
@@ -128,8 +123,8 @@
                     <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600 group-hover:scale-110 transition-transform duration-300">
                         <i class="fa-solid fa-cloud-arrow-up text-4xl"></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Dosyaları Yükle</h2>
-                    <p class="text-slate-500 mb-6 px-4 text-sm">3 Aylık rapor için ilgili ayları (Örn: Ocak, Şubat, Mart) birlikte seçin.</p>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">Veri Yükle</h2>
+                    <p class="text-slate-500 mb-6 px-4 text-sm">Analiz etmek istediğiniz Excel dosyasını seçin.</p>
                     
                     <div class="bg-slate-900 text-white py-3 px-6 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg shadow-slate-300">
                         <i class="fa-solid fa-folder-open"></i> Dosya Seç
@@ -160,28 +155,16 @@
                     <div id="mobileFilters" class="filters-closed lg:sticky lg:top-24 space-y-4">
                         <div class="card p-5 border-t-4 border-indigo-600 space-y-5">
                             
-                            <!-- YENİ: GÖRÜNÜM MODU SEÇİCİ -->
-                            <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
-                                <label class="text-xs font-bold text-indigo-800 uppercase block mb-1.5"><i class="fa-solid fa-eye mr-1"></i> Rapor Tipi</label>
-                                <select id="viewMode" onchange="initDashboard()" class="w-full bg-white border border-indigo-200 text-indigo-900 text-sm rounded-lg p-2.5 font-bold outline-none shadow-sm focus:ring-2 focus:ring-indigo-500">
-                                    <option value="monthly">📅 Aylık Görünüm</option>
-                                    <option value="quarterly">📊 3 Aylık (Çeyrek)</option>
-                                </select>
-                                <p class="text-[10px] text-indigo-500 mt-2 leading-tight px-1 opacity-80">
-                                    <i class="fa-solid fa-circle-info mr-0.5"></i> Çeyrek modunda aylar otomatik toplanır (Örn: Q1 = Ocak+Şubat+Mart).
-                                </p>
-                            </div>
-
                             <!-- Dönem -->
                             <div>
-                                <label class="text-xs font-bold text-slate-500 uppercase block mb-1.5">Dönem Seçimi</label>
+                                <label class="text-xs font-bold text-slate-500 uppercase block mb-1.5">Dönem</label>
                                 <div class="relative">
                                     <select id="periodSelect" onchange="updateTableOptions()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg p-3 outline-none appearance-none font-bold focus:ring-2 focus:ring-indigo-500 transition"></select>
                                     <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-xs text-slate-400 pointer-events-none"></i>
                                 </div>
                             </div>
 
-                            <!-- Tablo Kaynağı (Sadece Aylık modda görünür) -->
+                            <!-- Tablo Kaynağı -->
                             <div id="tableSelectWrapper">
                                 <label class="text-xs font-bold text-slate-500 uppercase block mb-1.5">Veri Kaynağı</label>
                                 <select id="tableSelect" onchange="renderDashboard()" class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-lg p-2 outline-none font-bold"></select>
@@ -247,12 +230,7 @@
                         </div>
                         <div id="barChart" class="w-full h-[350px] lg:h-[450px]"></div>
                         
-                        <!-- Çeyrek Modu Bilgi Notu -->
-                        <div id="quarterInfoNote" class="hidden mt-4 text-xs text-indigo-600 bg-indigo-50 p-2 rounded border border-indigo-100 text-center font-medium">
-                            <i class="fa-solid fa-calculator mr-1"></i> Veriler, seçili çeyreğe ait yüklenen ayların toplamıdır.
-                        </div>
-                        
-                        <!-- Bilgi Notu (Normal - İLK 4 ÜLKE) -->
+                        <!-- Bilgi Notu (İLK 4 ÜLKE) -->
                         <div id="chartInfoNote" class="mt-4 hidden"></div>
                     </div>
 
@@ -307,11 +285,11 @@
             <div class="space-y-4 text-sm text-slate-600">
                 <div class="flex gap-3">
                     <div class="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center text-indigo-600 font-bold">1</div>
-                    <p>3 Aylık rapor için <b>Ocak, Şubat ve Mart</b> dosyalarının hepsini birden seçip yükleyin.</p>
+                    <p>Excel dosyanızı <b>Dosya Seç</b> butonuna basarak yükleyin.</p>
                 </div>
                 <div class="flex gap-3">
                     <div class="w-8 h-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center text-indigo-600 font-bold">2</div>
-                    <p>Sol menüden <b>Rapor Tipi</b> kısmını <b>"3 Aylık (Çeyrek)"</b> olarak değiştirin.</p>
+                    <p>Uygulama otomatik olarak verileri analiz edip grafikleri oluşturacaktır.</p>
                 </div>
                 <div class="bg-yellow-50 p-3 rounded-lg text-yellow-800 text-xs mt-2 border border-yellow-100">
                     <b>İpucu:</b> Telefonu yan çevirirseniz grafikler daha geniş görünür.
@@ -364,6 +342,7 @@
 
         // --- VERİ İŞLEME MANTIĞI ---
         let globalData = [];
+        let monthlyTotals = {}; // HER AY İÇİN GENEL TOPLAMLARI SAKLAYACAĞIZ
         let availableTables = {};
         
         // Ay Haritası (İsim -> Sayı)
@@ -374,8 +353,6 @@
             "ekim": 10, "kasim": 11, "kasım": 11, "aralik": 12, "aralık": 12 
         };
         
-        const quarterNames = { 1: "1. Çeyrek (Ocak-Mart)", 2: "2. Çeyrek (Nisan-Haziran)", 3: "3. Çeyrek (Temmuz-Eylül)", 4: "4. Çeyrek (Ekim-Aralık)" };
-
         document.getElementById('fileInput').addEventListener('change', async (e) => {
             const files = e.target.files;
             if (!files.length) return;
@@ -385,6 +362,7 @@
 
             setTimeout(async () => {
                 globalData = []; 
+                monthlyTotals = {}; // Sıfırla
                 try {
                     for (let file of files) await processFile(file);
                     
@@ -459,8 +437,25 @@
                                     if(!nation || typeof nation !== 'string' || nation.length < 2) continue;
                                     
                                     nation = nation.trim();
+                                    const nationUpper = nation.toUpperCase();
+
+                                    // GENEL TOPLAM SATIRINI BUL VE SAKLA
+                                    if(nationUpper === "GENEL TOPLAM" || nationUpper === "TOPLAM" || nationUpper === "GRAND TOTAL") {
+                                        // Eğer bu ay için henüz toplam kaydedilmediyse kaydet (veya güncelle)
+                                        if(!monthlyTotals[monthIdx]) {
+                                            monthlyTotals[monthIdx] = { v24: parseNum(dRow[idx24]), v25: parseNum(dRow[idx25]) };
+                                        } else {
+                                            // Birden fazla toplam satırı varsa en büyüğünü al (alt toplam riskine karşı)
+                                            const v24 = parseNum(dRow[idx24]);
+                                            if(v24 > monthlyTotals[monthIdx].v24) {
+                                                 monthlyTotals[monthIdx] = { v24: v24, v25: parseNum(dRow[idx25]) };
+                                            }
+                                        }
+                                        continue; // Bu satırı ülkeler listesine ekleme
+                                    }
+
                                     const blacklist = ["TOPLAM", "DAĞILIM", "YEKÜN", "AVRUPA", "ASYA", "AFRİKA", "B.D.T", "CIS", "AMERİKA", "LİSTE SONU"];
-                                    if(blacklist.some(b => nation.toUpperCase().includes(b))) continue;
+                                    if(blacklist.some(b => nationUpper.includes(b))) continue;
 
                                     let v24 = parseNum(dRow[idx24]);
                                     let v25 = parseNum(dRow[idx25]);
@@ -492,106 +487,73 @@
 
         // --- DASHBOARD YÖNETİMİ ---
         function initDashboard() {
-            const mode = document.getElementById('viewMode').value;
             const pSel = document.getElementById('periodSelect');
-            const tableWrap = document.getElementById('tableSelectWrapper');
-            const qBadge = document.getElementById('quarterBadge');
-            const qInfo = document.getElementById('quarterInfoNote');
-            
             pSel.innerHTML = "";
 
-            if (mode === 'monthly') {
-                // AYLIK MOD
-                qBadge.classList.add('hidden');
-                qInfo.classList.add('hidden');
-                tableWrap.classList.remove('hidden');
-
-                const months = [...new Set(globalData.map(d => d.m))].sort((a,b) => b-a);
-                months.forEach(m => {
-                    const opt = document.createElement('option');
-                    // Ay ismini bul
-                    const mName = Object.keys(monthMap).find(key => monthMap[key] === m) || "Ay " + m;
-                    const formattedName = mName.charAt(0).toUpperCase() + mName.slice(1);
-                    opt.value = m;
-                    opt.innerText = `${formattedName} 2025`;
-                    pSel.appendChild(opt);
-                });
-            } else {
-                // ÇEYREK MODU
-                qBadge.classList.remove('hidden');
-                qInfo.classList.remove('hidden');
-                tableWrap.classList.add('hidden'); // Çeyrekte tabloları birleştiriyoruz
-
-                // Çeyrekleri hesapla
-                const quarters = [...new Set(globalData.map(d => Math.ceil(d.m / 3)))].sort((a,b) => b-a);
-                quarters.forEach(q => {
-                    if(q > 0) {
-                        const opt = document.createElement('option');
-                        opt.value = q;
-                        opt.innerText = `2025 - ${quarterNames[q]}`;
-                        pSel.appendChild(opt);
-                    }
-                });
-            }
+            const months = [...new Set(globalData.map(d => d.m))].sort((a,b) => b-a);
+            months.forEach(m => {
+                const opt = document.createElement('option');
+                // Ay ismini bul
+                const mName = Object.keys(monthMap).find(key => monthMap[key] === m) || "Ay " + m;
+                const formattedName = mName.charAt(0).toUpperCase() + mName.slice(1);
+                opt.value = m;
+                opt.innerText = `${formattedName} 2025`;
+                pSel.appendChild(opt);
+            });
+            
             updateTableOptions();
         }
 
         function updateTableOptions() {
-            const mode = document.getElementById('viewMode').value;
             const tSel = document.getElementById('tableSelect');
-            
-            if (mode === 'monthly') {
-                const month = parseInt(document.getElementById('periodSelect').value);
-                const tables = [...new Set(globalData.filter(d => d.m === month).map(d => d.tName))];
-                tSel.innerHTML = "";
-                tables.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t; opt.innerText = t;
-                    tSel.appendChild(opt);
-                });
-            }
+            const month = parseInt(document.getElementById('periodSelect').value);
+            const tables = [...new Set(globalData.filter(d => d.m === month).map(d => d.tName))];
+            tSel.innerHTML = "";
+            tables.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t; opt.innerText = t;
+                tSel.appendChild(opt);
+            });
             renderDashboard();
         }
 
         function renderDashboard() {
-            const mode = document.getElementById('viewMode').value;
             const pVal = parseInt(document.getElementById('periodSelect').value);
             const topN = parseInt(document.getElementById('topNRange').value);
             const countries = Array.from(document.getElementById('countrySelect').selectedOptions).map(o=>o.value);
 
-            let aggData = {}; // Agrege veri: { "ALMANYA": {n: "Almanya", v24: 100, v25: 120}, ... }
+            let aggData = {}; 
+            
+            // KPI İÇİN ÖZEL TOPLAMLAR
+            let grandTotal24 = 0;
+            let grandTotal25 = 0;
 
-            if (mode === 'monthly') {
-                const tName = document.getElementById('tableSelect').value;
-                const raw = globalData.filter(d => d.m === pVal && d.tName === tName);
-                
-                raw.forEach(r => {
-                    const k = r.n.toUpperCase();
-                    if(!aggData[k]) aggData[k] = { n: r.n, v24:0, v25:0 };
-                    aggData[k].v24 += r.v24; aggData[k].v25 += r.v25;
-                });
-                document.getElementById('chartTitle').innerText = "Aylık Analiz";
-
+            const tName = document.getElementById('tableSelect').value;
+            const raw = globalData.filter(d => d.m === pVal && d.tName === tName);
+            
+            raw.forEach(r => {
+                const k = r.n.toUpperCase();
+                if(!aggData[k]) aggData[k] = { n: r.n, v24:0, v25:0 };
+                aggData[k].v24 += r.v24; aggData[k].v25 += r.v25;
+            });
+            
+            // KPI: O ayın GENEL TOPLAM satırını kullan
+            if(monthlyTotals[pVal]) {
+                grandTotal24 = monthlyTotals[pVal].v24;
+                grandTotal25 = monthlyTotals[pVal].v25;
             } else {
-                // Çeyrek Modu: Seçili çeyreğe ait ayları topla (Q1 = 1,2,3)
-                const startM = (pVal - 1) * 3 + 1;
-                const endM = startM + 2;
-                
-                const raw = globalData.filter(d => d.m >= startM && d.m <= endM);
-                
-                raw.forEach(r => {
-                    const k = r.n.toUpperCase();
-                    if(!aggData[k]) aggData[k] = { n: r.n, v24:0, v25:0 };
-                    aggData[k].v24 += r.v24; aggData[k].v25 += r.v25;
-                });
-                document.getElementById('chartTitle').innerText = `${pVal}. Çeyrek Özeti`;
+                // Bulamazsa (eski usul) topla
+                grandTotal24 = raw.reduce((a,b)=>a+b.v24,0);
+                grandTotal25 = raw.reduce((a,b)=>a+b.v25,0);
             }
+
+            document.getElementById('chartTitle').innerText = "Aylık Analiz";
             
             let data = Object.values(aggData).sort((a,b) => b.v25 - a.v25);
 
-            // Ülke filtresini doldur (ilk açılışta veya mod/dönem değişince)
+            // Ülke filtresini doldur
             const cSel = document.getElementById('countrySelect');
-            const ctxKey = mode + pVal;
+            const ctxKey = 'm' + pVal;
             if(cSel.options.length === 0 || cSel.getAttribute('data-ctx') !== ctxKey) {
                 cSel.innerHTML = "";
                 data.forEach(d => {
@@ -606,16 +568,24 @@
             // Filtrele
             let display = countries.length > 0 ? data.filter(d => countries.includes(d.n)) : data.slice(0, topN);
 
-            updateKPIs(display);
+            // KPI fonksiyonuna özel toplamları gönder
+            updateKPIs(display, grandTotal24, grandTotal25);
             drawCharts(display);
             drawTable(display);
             showInfoNote(display);
             window.dispatchEvent(new Event('resize'));
         }
 
-        function updateKPIs(data) {
-            const t24 = data.reduce((a,b)=>a+b.v24,0);
-            const t25 = data.reduce((a,b)=>a+b.v25,0);
+        // updateKPIs artık dışarıdan gelen kesin toplamları kullanıyor
+        function updateKPIs(data, total24, total25) {
+            let t24 = total24;
+            let t25 = total25;
+            
+            if(t24 === 0 && t25 === 0 && data.length > 0) {
+                 t24 = data.reduce((a,b)=>a+b.v24,0);
+                 t25 = data.reduce((a,b)=>a+b.v25,0);
+            }
+
             const growth = t24 > 0 ? ((t25-t24)/t24)*100 : 0;
             
             document.getElementById('kpi2024').innerText = t24.toLocaleString('tr-TR');
@@ -631,8 +601,7 @@
         function drawCharts(data) {
             const isMobile = window.innerWidth < 768;
             const names = data.map(d=>d.n);
-            const mode = document.getElementById('viewMode').value;
-            const barColor = mode === 'quarterly' ? '#4f46e5' : '#2563eb'; // Çeyrekte indigo, aylıkta mavi
+            const barColor = '#2563eb';
 
             // Bar Chart
             Plotly.newPlot('barChart', [
@@ -720,11 +689,6 @@
         }
 
         function downloadExcel() {
-            // Basit Excel İndirme
-            const mode = document.getElementById('viewMode').value;
-            const pVal = parseInt(document.getElementById('periodSelect').value);
-            // Sadece Excel indirmek için geçici çözüm: Mevcut datayı tekrar hesaplayıp indirmek daha sağlam
-            // Ancak UI'daki basit "Excel" butonu için şimdilik global datadan filtrelemek yeterli.
              alert("Bu özellik tam versiyonda geliştirilecek. Şimdilik görseli indiriniz.");
         }
     </script>
